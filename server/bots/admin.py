@@ -3,9 +3,10 @@ from .models import Bot, ScenarioNode, Lead
 
 @admin.register(Bot)
 class BotAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'owner', 'is_active')
+    list_display = ('id', 'name', 'owner', 'widget_id', 'is_active')
     list_filter = ('is_active', 'owner')
-    search_fields = ('name',)
+    search_fields = ('name', 'widget_id')
+    readonly_fields = ('widget_id', 'created_at', 'updated_at')
     ordering = ('-created_at',)
 
 @admin.register(ScenarioNode)
