@@ -1,11 +1,11 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:15
     container_name: saas_chat_db
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - "5434:5432" # Доступ к БД снаружи через порт 5434
     environment:
       - POSTGRES_DB=chatbot_db
       - POSTGRES_USER=chatbot_user
@@ -30,7 +30,7 @@ services:
       - DB_USER=chatbot_user
       - DB_PASSWORD=chatbot_password
       - DB_HOST=db
-      - DB_PORT=5432
+      - DB_PORT=5432 # Внутренний порт сети Docker
     depends_on:
       db:
         condition: service_healthy
