@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaaS Chat Widget Test</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 40px;
+            height: 2000px; /* Чтобы можно было поскроллить */
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Тестовая страница виджета</h1>
+        <p>Если всё настроено правильно, в правом нижнем углу должна появиться кнопка чата.</p>
+        <p>ID бота: <code>f5be050e-f6a8-432b-a720-951f390dbd8e</code></p>
+    </div>
+
+    <!-- Подключаем наш скомпилированный виджет -->
+    <script 
+        id="saas-chat-script" 
+        data-widget-id="f5be050e-f6a8-432b-a720-951f390dbd8e" 
+        src="dist/widget.js">
+    </script>
+</body>
+</html>

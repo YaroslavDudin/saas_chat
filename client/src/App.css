@@ -1,0 +1,186 @@
+/* Изоляция стилей через родительский класс */
+.saas-widget-wrapper {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 999999;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  color: #1a1a1a;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Кнопка открытия/закрытия */
+.saas-widget-wrapper .saas-chat-button {
+  width: 60px;
+  height: 60px;
+  border-radius: 30px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.saas-widget-wrapper .saas-chat-button:hover {
+  transform: scale(1.1);
+}
+
+.saas-widget-wrapper .saas-chat-button svg {
+  width: 28px;
+  height: 28px;
+}
+
+/* Окно чата */
+.saas-widget-wrapper .saas-chat-window {
+  position: absolute;
+  bottom: 80px;
+  right: 0;
+  width: 380px;
+  height: 600px;
+  max-height: calc(100vh - 120px);
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: saas-slide-in 0.3s ease-out;
+}
+
+@keyframes saas-slide-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Шапка чата */
+.saas-widget-wrapper .saas-chat-header {
+  padding: 20px;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+}
+
+/* Область сообщений */
+.saas-widget-wrapper .saas-chat-messages {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Стили пузырей сообщений */
+.saas-widget-wrapper .saas-msg {
+  max-width: 85%;
+  padding: 12px 16px;
+  font-size: 14px;
+  position: relative;
+  word-wrap: break-word;
+}
+
+.saas-widget-wrapper .saas-msg.bot {
+  align-self: flex-start;
+  background: #ffffff;
+  color: #1a1a1a;
+  border-radius: 18px 18px 18px 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  border: 1px solid #eef0f2;
+}
+
+.saas-widget-wrapper .saas-msg.user {
+  align-self: flex-end;
+  background: #3b82f6; /* Можно заменить на переменную, если нужно менять динамически */
+  color: #ffffff;
+  border-radius: 18px 18px 4px 18px;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+/* Футер и ввод данных */
+.saas-widget-wrapper .saas-chat-footer {
+  padding: 16px;
+  background: #ffffff;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* Кнопки выбора */
+.saas-widget-wrapper .saas-choice-btn {
+  width: 100%;
+  padding: 10px 16px;
+  background: #ffffff;
+  border: 1px solid #3b82f6;
+  color: #3b82f6;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.saas-widget-wrapper .saas-choice-btn:hover {
+  background: #3b82f6;
+  color: #ffffff;
+}
+
+/* Инпуты (сбор телефона и т.д.) */
+.saas-widget-wrapper .saas-input-area {
+  display: flex;
+  gap: 8px;
+}
+
+.saas-widget-wrapper .saas-input-area input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+}
+
+.saas-widget-wrapper .saas-input-area input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.saas-widget-wrapper .saas-input-area button {
+  padding: 8px 16px;
+  background: #1a1a1a;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: opacity 0.2s;
+}
+
+.saas-widget-wrapper .saas-input-area button:hover {
+  opacity: 0.9;
+}
+
+/* Скроллбар */
+.saas-widget-wrapper .saas-chat-messages::-webkit-scrollbar {
+  width: 5px;
+}
+
+.saas-widget-wrapper .saas-chat-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.saas-widget-wrapper .saas-chat-messages::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 10px;
+}
+
+/* Адаптивность для мобилок */
+@media (max-width: 480px) {
+  .saas-widget-wrapper .saas-chat-window {
+    width: calc(100vw - 40px);
+    height: calc(100vh - 100px);
+  }
+}
