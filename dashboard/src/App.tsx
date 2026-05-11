@@ -1,15 +1,10 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import BotBuilder from './pages/BotBuilder';
 import ProtectedRoute from './components/ProtectedRoute';
-
-const Register = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <h1 className="text-xl text-gray-700">Страница регистрации (в разработке)</h1>
-  </div>
-);
 
 const App: React.FC = () => {
   return (
@@ -27,7 +22,7 @@ const App: React.FC = () => {
       </Route>
 
       {/* Редирект с корня */}
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/" element={<Navigate to="/register" replace />} />
     </Routes>
   );
 };

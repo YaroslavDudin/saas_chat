@@ -1,12 +1,36 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, User, ChevronRight, RefreshCcw } from 'lucide-react';
+import { MessageCircle, X, Send, User, ChevronRight } from 'lucide-react';
 import type { BotConfig, Message, ScenarioNode } from './types';
 
 interface AppProps {
   widgetId: string;
 }
 
-const API_BASE = '/api'; // Using proxy
+const getApiBase = () => {
+  // 1. Поиск скрипта для определения базового URL
+  const scriptTag = document.getElementById('saas-chat-script') as HTMLScriptElement 
+    || document.querySelector('script[data-widget-id]') as HTMLScriptElement;
+  
+  if (scriptTag && scriptTag.src) {
+    try {
+      const url = new URL(scriptTag.src);
+      
+      // Если виджет загружен с сервера разработки Vite (5174), 
+      // то API скорее всего находится на 8000 порту (Django)
+      if (url.port === '5174') {
+        return 'http://localhost:8000/api';
+      }
+      
+      // В продакшене используем домен, с которого загружен скрипт
+      return `${url.origin}/api`;
+    } catch (e) {
+      return '/api';
+    }
+  }
+  return '/api';
+};
+
+const API_BASE = getApiBase();
 
 const App: React.FC<AppProps> = ({ widgetId }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -246,20 +270,6 @@ const App: React.FC<AppProps> = ({ widgetId }) => {
                   >
                     Продолжить
                     <ChevronRight className="twbot:w-5 twbot:h-5" />
-                  </button>
-                )}
-
-                {/* END STATE / RESTART */}
-                {currentNode.content === 'END_CHAT' && (
-                  <button 
-                    className="twbot:w-full twbot:py-4 twbot:bg-slate-900 twbot:text-white twbot:rounded-2xl twbot:text-xs twbot:font-black twbot:uppercase twbot:tracking-widest hover:twbot:bg-black twbot:transition-all twbot:shadow-xl active:twbot:scale-95 twbot:flex twbot:items-center twbot:justify-center twbot:gap-3"
-                    onClick={() => {
-                      setMessages([]);
-                      fetchBotConfig();
-                    }}
-                  >
-                    <RefreshCcw className="twbot:w-4 twbot:h-4" />
-                    Начать сначала
                   </button>
                 )}
               </div>
