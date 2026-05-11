@@ -11,6 +11,7 @@ export type ScenarioNode = {
   id?: number;
   step_type: string;
   content: string;
+  settings?: any;
 }
 
 export type CreateBotDTO = {

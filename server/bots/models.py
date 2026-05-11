@@ -51,8 +51,9 @@ class ScenarioNode(TimeStampedModel):
     """
     STEP_TYPES = [
         ('message', 'Сообщение'),
-        ('phone_collection', 'Сбор номера телефона'),
+        ('question', 'Свободный ввод'),
         ('button_choice', 'Выбор кнопкой'),
+        ('form', 'Форма (Email/Phone)'),
     ]
 
     bot = models.ForeignKey(
@@ -67,6 +68,11 @@ class ScenarioNode(TimeStampedModel):
         verbose_name="Тип шага"
     )
     content = models.TextField(verbose_name="Контент сообщения")
+    settings = models.JSONField(
+        default=dict, 
+        blank=True, 
+        verbose_name="Настройки (кнопки, валидация)"
+    )
 
     class Meta:
         verbose_name = "Узел сценария"
@@ -89,10 +95,10 @@ class Lead(TimeStampedModel):
         max_length=255, 
         verbose_name="ID посетителя (сессии)"
     )
-    contact_info = models.CharField(
-        max_length=255, 
+    data = models.JSONField(
+        default=dict, 
         blank=True, 
-        verbose_name="Контактные данные"
+        verbose_name="Собранные данные"
     )
     chat_history = models.JSONField(
         default=list, 

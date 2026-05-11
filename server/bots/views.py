@@ -23,7 +23,7 @@ class BotViewSet(viewsets.ModelViewSet):
     def save_nodes(self, request, pk=None):
         """
         Удаляет старые узлы и массово создает новые для конкретного бота.
-        Ожидает список объектов: [{"step_type": "...", "content": "..."}, ...]
+        Ожидает список объектов: [{"step_type": "...", "content": "...", "settings": {}}, ...]
         """
         bot = self.get_object()
         nodes_data = request.data
@@ -43,7 +43,8 @@ class BotViewSet(viewsets.ModelViewSet):
                 ScenarioNode(
                     bot=bot,
                     step_type=node.get('step_type'),
-                    content=node.get('content')
+                    content=node.get('content'),
+                    settings=node.get('settings', {})
                 ) for node in nodes_data
             ]
             ScenarioNode.objects.bulk_create(new_nodes)
@@ -62,6 +63,7 @@ class BotResponseAPIView(APIView):
         widget_id = request.data.get('widget_id')
         visitor_id = request.data.get('visitor_id')
         current_node_id = request.data.get('current_node_id')
+        user_value = request.data.get('value')
 
         if not widget_id or not visitor_id:
             return Response(
@@ -69,44 +71,47 @@ class BotResponseAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 1. Находим бота
         bot = get_object_or_404(Bot, widget_id=widget_id, is_active=True)
+        lead, _ = Lead.objects.get_or_create(bot=bot, visitor_id=visitor_id)
 
-        # 2. Находим или создаем лид
-        lead, created = Lead.objects.get_or_create(
-            bot=bot,
-            visitor_id=visitor_id
-        )
-
-        # 3. Находим текущий узел (если передан)
-        current_node = None
+        target_frontend_id = None
+        
+        # Сохраняем данные если они переданы
         if current_node_id:
             current_node = ScenarioNode.objects.filter(bot=bot, id=current_node_id).first()
+            if current_node:
+                # Определяем следующий узел на основе логики ветвления
+                if current_node.step_type == 'button_choice':
+                    branching = current_node.settings.get('branching', {})
+                    target_frontend_id = branching.get(user_value)
+                else:
+                    target_frontend_id = current_node.settings.get('next_node')
 
-        # 4. Логика MVP: находим следующий узел (ID > текущего)
-        next_node_query = ScenarioNode.objects.filter(bot=bot)
-        if current_node_id:
-            next_node_query = next_node_query.filter(id__gt=current_node_id)
-        
-        next_node = next_node_query.order_by('id').first()
+                # Сохраняем ответ пользователя
+                if user_value:
+                    data_key = current_node.settings.get('data_key', f"field_{current_node_id}")
+                    if not lead.data: lead.data = {}
+                    lead.data[data_key] = user_value
+                    
+                    # Обновляем историю
+                    if not lead.chat_history: lead.chat_history = []
+                    lead.chat_history.append({
+                        "node_id": current_node_id,
+                        "type": current_node.step_type,
+                        "question": current_node.content,
+                        "answer": user_value
+                    })
+                    lead.save()
 
-        # 5. Обновляем историю чата
-        step_entry = {
-            "node_id": current_node_id,
-            "step_type": current_node.step_type if current_node else "start",
-            "content": current_node.content if current_node else "initial_contact",
-            "timestamp": str(lead.updated_at)
-        }
-        
-        if not isinstance(lead.chat_history, list):
-            lead.chat_history = []
-            
-        lead.chat_history.append(step_entry)
-        lead.save()
+        # Находим следующий узел
+        if target_frontend_id:
+            next_node = ScenarioNode.objects.filter(bot=bot, settings__frontend_id=target_frontend_id).first()
+        else:
+            # Fallback для старых (линейных) ботов или если ветвление не задано
+            next_node = ScenarioNode.objects.filter(bot=bot, id__gt=current_node_id).order_by('id').first() if current_node_id else None
 
-        # 6. Возвращаем следующий узел
         if not next_node:
-            return Response({"message": "End of scenario"}, status=status.HTTP_200_OK)
+            return Response({"message": "Ваш вопрос получен, с вами свяжется менеджер как только освободится."}, status=status.HTTP_200_OK)
 
         serializer = ScenarioNodeSerializer(next_node)
         return Response(serializer.data)
@@ -119,7 +124,13 @@ class BotInitAPIView(APIView):
 
     def get(self, request, widget_id):
         bot = get_object_or_404(Bot, widget_id=widget_id, is_active=True)
-        first_node = ScenarioNode.objects.filter(bot=bot).order_by('id').first()
+        
+        # Ищем узел, помеченный как первый в настройках
+        first_node = ScenarioNode.objects.filter(bot=bot, settings__is_first=True).first()
+        
+        # Если такого нет, берем самый первый созданный
+        if not first_node:
+            first_node = ScenarioNode.objects.filter(bot=bot).order_by('id').first()
         
         return Response({
             "name": bot.name,

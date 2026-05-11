@@ -35,5 +35,31 @@ services:
       db:
         condition: service_healthy
 
+  dashboard:
+    build: ./dashboard
+    container_name: saas_chat_dashboard
+    volumes:
+      - ./dashboard:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_PROXY_TARGET=http://web:8000
+    depends_on:
+      - web
+
+  client:
+    build: ./client
+    container_name: saas_chat_client
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    ports:
+      - "5174:5174"
+    environment:
+      - VITE_PROXY_TARGET=http://web:8000
+    depends_on:
+      - web
+
 volumes:
   postgres_data:

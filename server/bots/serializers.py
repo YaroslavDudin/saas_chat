@@ -4,7 +4,7 @@ from .models import Bot, ScenarioNode
 class ScenarioNodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ScenarioNode
-        fields = ['id', 'step_type', 'content']
+        fields = ['id', 'step_type', 'content', 'settings']
 
 class BotDashboardSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')

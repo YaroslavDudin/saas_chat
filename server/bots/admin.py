@@ -22,7 +22,7 @@ class ScenarioNodeAdmin(admin.ModelAdmin):
 
 @admin.register(Lead)
 class LeadAdmin(admin.ModelAdmin):
-    list_display = ('bot', 'contact_info', 'created_at')
+    list_display = ('bot', 'visitor_id', 'created_at')
     list_filter = ('bot', 'created_at')
-    search_fields = ('contact_info', 'visitor_id')
+    search_fields = ('visitor_id',)
     readonly_fields = ('created_at', 'updated_at')

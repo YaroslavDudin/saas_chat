@@ -1,9 +1,14 @@
-export type StepType = 'message' | 'phone_collection' | 'button_choice';
+export type StepType = 'message' | 'question' | 'button_choice' | 'form';
 
 export interface ScenarioNode {
     id: number;
     step_type: StepType;
     content: string;
+    settings?: {
+      buttons?: string[];
+      data_key?: string;
+      placeholder?: string;
+    };
 }
 
 export interface BotConfig {

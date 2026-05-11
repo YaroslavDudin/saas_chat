@@ -1,7 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
-import { Plus, Settings, Copy, Check, MessageSquare, Loader2, LogOut } from 'lucide-react';
+import { 
+  Plus, 
+  Settings, 
+  Copy, 
+  Check, 
+  MessageSquare, 
+  Loader2, 
+  LogOut, 
+  Trash2, 
+  Edit2, 
+  X,
+  ExternalLink,
+  ChevronRight
+} from 'lucide-react';
 import type { Bot } from '../types';
 
 const Dashboard: React.FC = () => {
@@ -9,6 +22,9 @@ const Dashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newBotName, setNewBotName] = useState('');
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editName, setEditName] = useState('');
+  
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isScriptModalOpen, setIsScriptModalOpen] = useState(false);
   const [activeWidgetId, setActiveWidgetId] = useState<string | null>(null);
@@ -45,9 +61,32 @@ const Dashboard: React.FC = () => {
       setBots([...bots, response.data]);
       setIsModalOpen(false);
       setNewBotName('');
+      // Redirect to builder immediately for intuitive flow
+      navigate(`/dashboard/builder/${response.data.id}`);
     } catch (error) {
       console.error('Failed to create bot:', error);
-      alert('Ошибка при создании бота. Проверьте подключение к бэкенду.');
+      alert('Ошибка при создании бота.');
+    }
+  };
+
+  const handleRename = async (id: number) => {
+    if (!editName.trim()) return;
+    try {
+      await api.patch(`/manage/${id}/`, { name: editName });
+      setBots(bots.map(b => b.id === id ? { ...b, name: editName } : b));
+      setEditingId(null);
+    } catch (error) {
+      alert('Ошибка при переименовании');
+    }
+  };
+
+  const handleDeleteBot = async (id: number) => {
+    if (!window.confirm('Удалить этого бота и все его данные?')) return;
+    try {
+      await api.delete(`/manage/${id}/`);
+      setBots(bots.filter(b => b.id !== id));
+    } catch (error: any) {
+      alert('Ошибка при удалении');
     }
   };
 
@@ -66,101 +105,131 @@ const Dashboard: React.FC = () => {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const openScriptModal = (widgetId: string) => {
-    setActiveWidgetId(widgetId);
-    setIsScriptModalOpen(true);
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-[#f8fafc] p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Дашборд</h1>
-            <p className="text-gray-500 mt-1">Управление вашими чат-ботами</p>
+            <h1 className="text-4xl font-black text-slate-900 tracking-tight">Мои Боты</h1>
+            <p className="text-slate-500 font-medium mt-1">Управляйте вашими чат-ассистентами</p>
           </div>
-          <div className="flex gap-3">
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-600 px-5 py-3 rounded-xl font-semibold transition-all active:scale-95"
-              title="Выйти"
+          <div className="flex items-center gap-3 w-full md:w-auto">
+             <button
+              onClick={() => setIsModalOpen(true)}
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-2xl font-bold transition-all shadow-xl shadow-indigo-100 active:scale-95"
             >
-              <LogOut size={20} />
-              Выйти
+              <Plus size={24} />
+              Создать бота
             </button>
             <button
-              onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-lg shadow-blue-200 active:scale-95"
+              onClick={handleLogout}
+              className="p-4 bg-white hover:bg-slate-50 text-slate-400 rounded-2xl border border-slate-200 transition-all active:scale-95"
+              title="Выйти"
             >
-              <Plus size={22} />
-              Создать нового бота
+              <LogOut size={24} />
             </button>
           </div>
         </div>
 
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
-            <Loader2 className="animate-spin text-blue-600" size={48} />
+            <Loader2 className="animate-spin text-indigo-600" size={48} />
           </div>
         ) : bots.length === 0 ? (
-          <div className="bg-white rounded-3xl p-16 text-center border border-dashed border-gray-300 shadow-inner">
-            <div className="bg-blue-50 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <MessageSquare className="text-blue-600" size={40} />
+          <div className="bg-white rounded-[2.5rem] p-20 text-center border-2 border-dashed border-slate-200 shadow-sm">
+            <div className="bg-indigo-50 w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-8">
+              <MessageSquare className="text-indigo-600" size={48} />
             </div>
-            <h3 className="text-2xl font-bold text-gray-900">Список ботов пуст</h3>
-            <p className="text-gray-500 mt-2 max-w-sm mx-auto text-lg">
-              Создайте своего первого бота прямо сейчас, чтобы начать работу.
+            <h3 className="text-3xl font-black text-slate-900 mb-4">Начните прямо сейчас</h3>
+            <p className="text-slate-500 text-lg mb-10 max-w-md mx-auto leading-relaxed">
+              Создайте своего первого бота, чтобы автоматизировать общение с клиентами.
             </p>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="mt-8 bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-md"
+              className="bg-indigo-600 text-white px-10 py-5 rounded-2xl font-black text-lg hover:bg-indigo-700 transition-all shadow-2xl shadow-indigo-200"
             >
               Создать первого бота
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {bots.map((bot) => (
-              <div key={bot.id} className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 group">
-                <div className="p-8">
+              <div key={bot.id} className="group bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 overflow-hidden flex flex-col">
+                <div className="p-8 flex-1">
                   <div className="flex justify-between items-start mb-6">
                     <div 
-                      className="w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-inner"
-                      style={{ backgroundColor: bot.theme_color || '#3b82f6' }}
+                      className="w-16 h-16 rounded-[1.25rem] flex items-center justify-center text-white shadow-inner transform group-hover:rotate-6 transition-transform"
+                      style={{ backgroundColor: bot.theme_color || '#4f46e5' }}
                     >
-                      <MessageSquare size={28} />
+                      <MessageSquare size={32} />
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                      <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${
-                        bot.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {bot.is_active ? 'Активен' : 'Черновик'}
-                      </span>
-                      <div className="flex items-center gap-1.5 bg-blue-50 px-3 py-1 rounded-lg text-blue-600">
-                        <span className="text-sm font-bold">{bot.leads_count || 0}</span>
-                        <span className="text-xs font-medium uppercase">Лидов</span>
-                      </div>
+                       <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-full">
+                         {bot.is_active ? 'Online' : 'Draft'}
+                       </span>
+                       <div className="text-slate-400 text-[11px] font-bold uppercase tracking-tighter">
+                         {bot.leads_count || 0} Leads
+                       </div>
                     </div>
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">{bot.name}</h3>
-                  <p className="text-sm text-gray-400 mb-8 font-mono bg-gray-50 p-2 rounded-lg truncate">ID: {bot.widget_id}</p>
-                  
-                  <div className="space-y-4">
+
+                  {editingId === bot.id ? (
+                    <div className="flex gap-2 mb-4">
+                      <input 
+                        autoFocus
+                        className="flex-1 px-4 py-2 bg-slate-50 border-2 border-indigo-500 rounded-xl text-lg font-bold outline-none"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleRename(bot.id)}
+                      />
+                      <button onClick={() => handleRename(bot.id)} className="p-2 bg-indigo-600 text-white rounded-xl"><Check size={20}/></button>
+                      <button onClick={() => setEditingId(null)} className="p-2 bg-slate-100 text-slate-400 rounded-xl"><X size={20}/></button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 mb-4 group/name">
+                      <h3 className="text-2xl font-black text-slate-900 group-hover/name:text-indigo-600 transition-colors">{bot.name}</h3>
+                      <button 
+                        onClick={() => { setEditingId(bot.id); setEditName(bot.name); }}
+                        className="p-1.5 text-slate-300 hover:text-indigo-600 opacity-0 group-hover:opacity-100 transition-all"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="bg-slate-50/50 rounded-2xl p-4 mb-4">
+                     <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">ID Виджета</p>
+                     <div className="font-mono text-[10px] text-slate-500 truncate">
+                        {bot.widget_id}
+                     </div>
+                  </div>
+                </div>
+
+                <div className="px-8 pb-8 space-y-3 mt-auto">
+                  <div className="flex gap-3">
                     <button
                       onClick={() => navigate(`/dashboard/builder/${bot.id}`)}
-                      className="w-full flex items-center justify-center gap-3 bg-gray-900 hover:bg-black text-white px-6 py-3 rounded-xl text-sm font-bold transition-all shadow-md"
+                      className="flex-1 flex items-center justify-center gap-2 bg-slate-900 hover:bg-black text-white px-6 py-4 rounded-2xl text-sm font-black transition-all shadow-lg active:scale-95"
                     >
                       <Settings size={18} />
-                      Редактировать
+                      Конструктор
                     </button>
                     <button
-                      onClick={() => openScriptModal(bot.widget_id)}
-                      className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-50 text-blue-600 px-6 py-3 rounded-xl text-sm font-bold transition-all border-2 border-blue-50"
+                      onClick={() => { setActiveWidgetId(bot.widget_id); setIsScriptModalOpen(true); }}
+                      className="p-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-2xl transition-all active:scale-95"
+                      title="Получить код"
                     >
-                      <Copy size={18} />
-                      Код виджета
+                      <Copy size={20} />
                     </button>
                   </div>
+                  <button
+                    onClick={() => handleDeleteBot(bot.id)}
+                    className="w-full flex items-center justify-center gap-2 py-3.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-2xl text-[11px] font-bold transition-all"
+                  >
+                    <Trash2 size={16} />
+                    Удалить бота
+                  </button>
                 </div>
               </div>
             ))}
@@ -168,36 +237,41 @@ const Dashboard: React.FC = () => {
         )}
       </div>
 
+      {/* New Bot Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
-          <div className="bg-white rounded-[2rem] max-w-md w-full p-10 shadow-2xl">
-            <h2 className="text-3xl font-black text-gray-900 mb-2">Новый бот</h2>
-            <p className="text-gray-500 mb-8">Придумайте название для вашего ассистента.</p>
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-[2.5rem] max-w-md w-full p-10 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-3xl font-black text-slate-900">Новый бот</h2>
+              <button onClick={() => setIsModalOpen(false)} className="p-2 text-slate-300 hover:text-slate-500"><X size={24}/></button>
+            </div>
             <form onSubmit={handleCreateBot}>
-              <div className="mb-8">
+              <div className="mb-10">
+                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Как назовём?</label>
                 <input
                   type="text"
                   required
                   autoFocus
-                  className="w-full px-6 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-blue-500 focus:bg-white outline-none transition-all text-lg font-medium"
-                  placeholder="Название (напр. Sales Bot)"
+                  className="w-full px-6 py-5 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-all text-xl font-bold"
+                  placeholder="Sales Assistant"
                   value={newBotName}
                   onChange={(e) => setNewBotName(e.target.value)}
                 />
               </div>
-              <div className="flex gap-4">
+              <div className="flex flex-col gap-3">
+                <button
+                  type="submit"
+                  className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:bg-indigo-700 transition-all shadow-2xl shadow-indigo-200 flex items-center justify-center gap-2"
+                >
+                  Создать и начать настройку
+                  <ChevronRight size={20} />
+                </button>
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 px-6 py-4 border-2 border-gray-100 text-gray-500 rounded-2xl font-bold hover:bg-gray-50 transition-all"
+                  className="w-full py-4 text-slate-400 font-bold hover:text-slate-600"
                 >
                   Отмена
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-6 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
-                >
-                  Создать
                 </button>
               </div>
             </form>
@@ -205,50 +279,45 @@ const Dashboard: React.FC = () => {
         </div>
       )}
 
+      {/* Script Modal */}
       {isScriptModalOpen && activeWidgetId && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
-          <div className="bg-white rounded-[2rem] max-w-2xl w-full p-10 shadow-2xl">
-            <div className="flex justify-between items-start mb-6">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-[3rem] max-w-2xl w-full p-12 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-2 bg-indigo-600"></div>
+            <div className="flex justify-between items-start mb-8">
               <div>
-                <h2 className="text-3xl font-black text-gray-900 mb-2">Код виджета</h2>
-                <p className="text-gray-500">Скопируйте этот код и вставьте его перед закрывающим тегом <code>&lt;/body&gt;</code> на вашем сайте.</p>
+                <h2 className="text-3xl font-black text-slate-900 mb-2">Установка виджета</h2>
+                <p className="text-slate-500 font-medium">Вставьте этот код на ваш сайт перед тегом <code>&lt;/body&gt;</code></p>
               </div>
               <button 
                 onClick={() => setIsScriptModalOpen(false)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 text-slate-300 hover:text-slate-500"
               >
-                <Plus size={24} className="rotate-45 text-gray-400" />
+                <X size={28} />
               </button>
             </div>
             
-            <div className="relative group">
-              <pre className="bg-gray-900 text-blue-400 p-6 rounded-2xl overflow-x-auto font-mono text-sm leading-relaxed border-4 border-gray-800 shadow-inner">
+            <div className="relative mb-8">
+              <pre className="bg-slate-900 text-indigo-300 p-8 rounded-3xl overflow-x-auto font-mono text-xs leading-relaxed border-8 border-slate-800 shadow-inner">
                 {getScriptTag(activeWidgetId)}
               </pre>
               <button
                 onClick={() => copyToClipboard(activeWidgetId)}
-                className="absolute top-4 right-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg flex items-center gap-2 active:scale-95"
+                className="absolute top-4 right-4 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-xl"
               >
-                {copiedId === activeWidgetId ? (
-                  <>
-                    <Check size={14} />
-                    Скопировано
-                  </>
-                ) : (
-                  <>
-                    <Copy size={14} />
-                    Копировать
-                  </>
-                )}
+                {copiedId === activeWidgetId ? <Check size={16} /> : <Copy size={16} />}
+                {copiedId === activeWidgetId ? 'Скопировано!' : 'Копировать код'}
               </button>
             </div>
 
-            <button
-              onClick={() => setIsScriptModalOpen(false)}
-              className="mt-8 w-full py-4 bg-gray-900 text-white rounded-2xl font-bold hover:bg-black transition-all shadow-xl"
-            >
-              Закрыть
-            </button>
+            <div className="flex">
+               <button
+                onClick={() => setIsScriptModalOpen(false)}
+                className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black hover:bg-black transition-all shadow-xl"
+              >
+                Понятно
+              </button>
+            </div>
           </div>
         </div>
       )}

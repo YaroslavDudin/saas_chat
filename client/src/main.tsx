@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App'; // Предполагаем, что App — это и есть наш Widget
+import App from './App';
+import './index.css';
 
 const initWidget = () => {
   // Поиск скрипта по ID или атрибуту

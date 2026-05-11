@@ -1,186 +1,273 @@
-/* Изоляция стилей через родительский класс */
+:root {
+  --bot-color: #4f46e5;
+}
+
 .saas-widget-wrapper {
   position: fixed;
   bottom: 20px;
   right: 20px;
   z-index: 999999;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   line-height: 1.5;
-  color: #1a1a1a;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Кнопка открытия/закрытия */
-.saas-widget-wrapper .saas-chat-button {
+/* Button Trigger */
+.saas-chat-button {
   width: 60px;
   height: 60px;
   border-radius: 30px;
+  background-color: var(--bot-color);
+  color: white;
+  border: none;
   cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.saas-widget-wrapper .saas-chat-button:hover {
-  transform: scale(1.1);
+.saas-chat-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
-.saas-widget-wrapper .saas-chat-button svg {
-  width: 28px;
-  height: 28px;
+.saas-chat-button.open {
+  transform: rotate(90deg);
 }
 
-/* Окно чата */
-.saas-widget-wrapper .saas-chat-window {
+/* Chat Window */
+.saas-chat-window {
   position: absolute;
   bottom: 80px;
   right: 0;
   width: 380px;
   height: 600px;
   max-height: calc(100vh - 120px);
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  background: white;
+  border-radius: 24px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: saas-slide-in 0.3s ease-out;
+  transform-origin: bottom right;
 }
 
-@keyframes saas-slide-in {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+.animate-in {
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Шапка чата */
-.saas-widget-wrapper .saas-chat-header {
-  padding: 20px;
-  color: #ffffff;
-  font-weight: 600;
-  font-size: 16px;
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Header */
+.saas-chat-header {
+  padding: 24px;
+  background-color: var(--bot-color);
+  color: white;
+}
+
+.saas-header-info {
   display: flex;
   align-items: center;
-}
-
-/* Область сообщений */
-.saas-widget-wrapper .saas-chat-messages {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  background: #f8f9fa;
-  display: flex;
-  flex-direction: column;
   gap: 12px;
 }
 
-/* Стили пузырей сообщений */
-.saas-widget-wrapper .saas-msg {
-  max-width: 85%;
-  padding: 12px 16px;
-  font-size: 14px;
-  position: relative;
-  word-wrap: break-word;
-}
-
-.saas-widget-wrapper .saas-msg.bot {
-  align-self: flex-start;
-  background: #ffffff;
-  color: #1a1a1a;
-  border-radius: 18px 18px 18px 4px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  border: 1px solid #eef0f2;
-}
-
-.saas-widget-wrapper .saas-msg.user {
-  align-self: flex-end;
-  background: #3b82f6; /* Можно заменить на переменную, если нужно менять динамически */
-  color: #ffffff;
-  border-radius: 18px 18px 4px 18px;
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
-}
-
-/* Футер и ввод данных */
-.saas-widget-wrapper .saas-chat-footer {
-  padding: 16px;
-  background: #ffffff;
-  border-top: 1px solid #f0f0f0;
-}
-
-/* Кнопки выбора */
-.saas-widget-wrapper .saas-choice-btn {
-  width: 100%;
-  padding: 10px 16px;
-  background: #ffffff;
-  border: 1px solid #3b82f6;
-  color: #3b82f6;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.2s;
-  text-align: center;
-}
-
-.saas-widget-wrapper .saas-choice-btn:hover {
-  background: #3b82f6;
-  color: #ffffff;
-}
-
-/* Инпуты (сбор телефона и т.д.) */
-.saas-widget-wrapper .saas-input-area {
+.saas-bot-avatar {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
   display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.saas-bot-avatar::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 10px;
+  height: 10px;
+  background: #22c55e;
+  border: 2px solid var(--bot-color);
+  border-radius: 50%;
+}
+
+.saas-bot-name {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.saas-bot-status {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* Messages */
+.saas-chat-messages {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #f8fafc;
+}
+
+.saas-msg-wrapper {
+  display: flex;
+  width: 100%;
+}
+
+.saas-msg-wrapper.bot { justify-content: flex-start; }
+.saas-msg-wrapper.user { justify-content: flex-end; }
+
+.saas-msg {
+  max-width: 80%;
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.saas-msg-wrapper.bot .saas-msg {
+  background: white;
+  color: #1e293b;
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.saas-msg-wrapper.user .saas-msg {
+  background: var(--bot-color);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+/* Typing Animation */
+.typing {
+  display: flex;
+  gap: 4px;
+  padding: 12px 20px;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  background: #cbd5e1;
+  border-radius: 50%;
+  animation: bounce 1.4s infinite ease-in-out;
+}
+
+.dot:nth-child(1) { animation-delay: -0.32s; }
+.dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
+}
+
+/* Footer & Controls */
+.saas-chat-footer {
+  padding: 20px;
+  background: white;
+  border-top: 1px solid #f1f5f9;
+}
+
+.saas-choices-grid {
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
-.saas-widget-wrapper .saas-input-area input {
+.saas-choice-btn {
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 2px solid var(--bot-color);
+  background: white;
+  color: var(--bot-color);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
   flex: 1;
-  padding: 10px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
+  min-width: calc(50% - 4px);
+  text-align: center;
+}
+
+.saas-choice-btn:hover {
+  background: var(--bot-color);
+  color: white;
+}
+
+.saas-choice-btn.primary {
+  background: var(--bot-color);
+  color: white;
+}
+
+/* Input Area */
+.saas-input-group {
+  display: flex;
+  gap: 8px;
+  background: #f1f5f9;
+  padding: 8px;
+  border-radius: 16px;
+}
+
+.saas-input-group input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 8px 12px;
   font-size: 14px;
   outline: none;
 }
 
-.saas-widget-wrapper .saas-input-area input:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-}
-
-.saas-widget-wrapper .saas-input-area button {
-  padding: 8px 16px;
-  background: #1a1a1a;
-  color: #ffffff;
+.saas-send-btn {
+  width: 40px;
+  height: 40px;
+  background: var(--bot-color);
+  color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
-  font-size: 14px;
-  transition: opacity 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
 }
 
-.saas-widget-wrapper .saas-input-area button:hover {
-  opacity: 0.9;
+.saas-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-/* Скроллбар */
-.saas-widget-wrapper .saas-chat-messages::-webkit-scrollbar {
-  width: 5px;
+.saas-send-btn:not(:disabled):hover {
+  transform: scale(1.05);
 }
 
-.saas-widget-wrapper .saas-chat-messages::-webkit-scrollbar-track {
-  background: transparent;
+/* Scrollbar */
+.saas-chat-messages::-webkit-scrollbar {
+  width: 4px;
 }
 
-.saas-widget-wrapper .saas-chat-messages::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 10px;
+.saas-chat-messages::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 2px;
 }
 
-/* Адаптивность для мобилок */
 @media (max-width: 480px) {
-  .saas-widget-wrapper .saas-chat-window {
+  .saas-chat-window {
     width: calc(100vw - 40px);
-    height: calc(100vh - 100px);
+    height: calc(100vh - 120px);
+    right: -10px;
   }
 }

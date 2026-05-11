@@ -2,7 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import Builder from './pages/Builder';
+import BotBuilder from './pages/BotBuilder';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const Register = () => (
@@ -23,7 +23,7 @@ const App: React.FC = () => {
         {/* Список ботов */}
         <Route index element={<Dashboard />} />
         {/* Конструктор сценария */}
-        <Route path="builder/:id" element={<Builder />} />
+        <Route path="builder/:id" element={<BotBuilder />} />
       </Route>
 
       {/* Редирект с корня */}

@@ -25,15 +25,20 @@
 <body>
     <div class="container">
         <h1>Тестовая страница виджета</h1>
+        <p style="color: #d97706; font-weight: bold; background: #fffbeb; padding: 10px; border-radius: 8px;">
+            ВАЖНО: Открывайте эту страницу на порту 5174: <br>
+            <a href="http://localhost:5174/test.html">http://localhost:5174/test.html</a>
+        </p>
         <p>Если всё настроено правильно, в правом нижнем углу должна появиться кнопка чата.</p>
         <p>ID бота: <code>f5be050e-f6a8-432b-a720-951f390dbd8e</code></p>
     </div>
 
-    <!-- Подключаем наш скомпилированный виджет -->
-    <script
+    <!-- Подключаем наш виджет. Используем абсолютный путь для надежности -->
+  <script
     id="saas-chat-script"
-    data-widget-id="bcc78d92-2a6e-4cd0-9ae2-26d6dd083e62"
-    src="dist/widget.js">
+    type="module"
+    data-widget-id="7842ddfa-9aee-4042-b6f7-6f55b091aeef"
+    src="http://localhost:5174/src/main.tsx">
 </script>
 </body>
 </html>
