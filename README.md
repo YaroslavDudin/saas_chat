@@ -52,46 +52,24 @@ SaaS Chat построен на базе современной масштаби
 | **Backend API** | [http://localhost:8000](http://localhost:8000) | Django REST Framework (админка доступна по `/admin`). |
 | **База данных** | `localhost:5434` | PostgreSQL (внешний порт для подключения через GUI). |
 
-### 🚀 Основные команды
+### 🚀 Локальная разработка (Docker)
+Самый быстрый способ запустить проект — использовать Docker Compose.
 
-#### Запуск проекта (Docker)
-```bash
-# Сборка и запуск всех контейнеров
-docker-compose up --build
+1.  **Клонируйте репозиторий**:
+    ```bash
+    git clone https://github.com/your-repo/saas-chat.git
+    cd saas_chat
+    ```
 
-# Запуск в фоновом режиме
-docker-compose up -d
-
-# Остановка и удаление контейнеров
-docker-compose down
-```
-
-#### Разработка клиентского виджета (`/client`)
-```bash
-# Установка зависимостей
-cd client && npm install
-
-# Запуск в режиме разработки (HMR)
-npm run dev
-
-# Сборка виджета в один файл (dist/widget.js)
-npm run build
-```
-
-#### Разработка панели управления (`/dashboard`)
-```bash
-# Запуск в режиме разработки
-cd dashboard && npm run dev
-```
-
-#### Работа с бэкендом (`/server`)
-```bash
-# Применение миграций (внутри контейнера)
-docker exec -it saas_chat_web python manage.py migrate
-
-# Создание суперпользователя
-docker exec -it saas_chat_web python manage.py createsuperuser
-```
+2.  **Запустите стек**:
+    ```bash
+    docker-compose up --build
+    ```
+    После запуска будут доступны:
+    - **Бэкенд**: `http://localhost:8000`
+    - **Панель управления**: `http://localhost:5173`
+    - **Тестовая страница виджета**: `http://localhost:5174/test.html`
+    - **База данных**: PostgreSQL (порт `5434` снаружи, `5432` внутри сети Docker).
 
 ### 💻 Технические особенности
 
