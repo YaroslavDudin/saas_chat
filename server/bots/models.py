@@ -1,8 +1,34 @@
 import uuid
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 User = get_user_model()
+
+class UserProfile(models.Model):
+    TIER_CHOICES = [
+        ('free', 'Free'),
+        ('premium', 'Premium'),
+    ]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile', verbose_name="Пользователь")
+    tier = models.CharField(max_length=20, choices=TIER_CHOICES, default='free', verbose_name="Тариф")
+    messages_limit = models.IntegerField(default=100, verbose_name="Лимит сообщений")
+    messages_used = models.IntegerField(default=0, verbose_name="Использовано сообщений")
+
+    def __str__(self):
+        return f"Profile for {self.user.username} ({self.tier})"
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    if hasattr(instance, 'profile'):
+        instance.profile.save()
 
 class TimeStampedModel(models.Model):
     """
@@ -37,6 +63,12 @@ class Bot(TimeStampedModel):
         verbose_name="Цвет темы"
     )
     is_active = models.BooleanField(default=True, verbose_name="Активен")
+    allowed_domain = models.CharField(
+        max_length=255, 
+        blank=True, 
+        null=True, 
+        help_text='Например: example.com'
+    )
 
     class Meta:
         verbose_name = "Бот"
@@ -100,10 +132,6 @@ class Lead(TimeStampedModel):
         blank=True, 
         verbose_name="Собранные данные"
     )
-    chat_history = models.JSONField(
-        default=list, 
-        verbose_name="История диалога"
-    )
 
     class Meta:
         verbose_name = "Лид"
@@ -111,3 +139,28 @@ class Lead(TimeStampedModel):
 
     def __str__(self):
         return f"Lead from {self.visitor_id} (Bot: {self.bot.name})"
+
+class ChatMessage(models.Model):
+    """
+    История сообщений в рамках лида.
+    """
+    lead = models.ForeignKey(
+        Lead, 
+        on_delete=models.CASCADE, 
+        related_name='messages'
+    )
+    node = models.ForeignKey(
+        ScenarioNode, 
+        on_delete=models.SET_NULL, 
+        null=True
+    )
+    user_answer = models.TextField(blank=True)
+    bot_text = models.TextField(default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Сообщение чата"
+        verbose_name_plural = "Сообщения чата"
+
+    def __str__(self):
+        return f"Msg for {self.lead.visitor_id} at {self.created_at}"

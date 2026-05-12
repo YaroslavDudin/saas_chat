@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api';
+import { v4 as uuidv4 } from 'uuid';
 import { 
   Plus, 
   Trash2, 
@@ -13,7 +14,8 @@ import {
   List,
   Hash,
   Settings,
-  X
+  X,
+  GitBranch
 } from 'lucide-react';
 import type { ScenarioNode, Bot } from '../types';
 
@@ -40,7 +42,11 @@ const Builder: React.FC = () => {
         setIsLoading(true);
         const response = await api.get(`/manage/${id}/`);
         setBot(response.data);
-        setNodes(response.data.nodes || []);
+        const initialNodes = (response.data.nodes || []).map((n: ScenarioNode) => ({
+          ...n,
+          settings: { ...n.settings, frontend_id: n.settings?.frontend_id || uuidv4() }
+        }));
+        setNodes(initialNodes);
       } catch (error) {
         console.error('Ошибка при загрузке данных:', error);
       } finally {
@@ -54,7 +60,10 @@ const Builder: React.FC = () => {
     const newNode: ScenarioNode = {
       step_type: 'message',
       content: '',
-      settings: { data_key: `field_${nodes.length + 1}` }
+      settings: { 
+         frontend_id: crypto.randomUUID(),
+        data_key: `field_${nodes.length + 1}` 
+       }
     };
     setNodes([...nodes, newNode]);
   };
@@ -194,13 +203,35 @@ const Builder: React.FC = () => {
                     
                     <div className="space-y-4">
                       <div>
-                        <label className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1 block">Текст сообщения</label>
+                        <div className="flex justify-between items-center mb-1">
+                          <label className="text-[10px] uppercase tracking-wider font-bold text-gray-400 block">Текст сообщения</label>
+                          <span className="text-[10px] text-gray-300 font-mono">ID: {node.settings?.frontend_id?.slice(0, 8)}</span>
+                        </div>
                         <textarea
                           className="w-full min-h-[80px] p-3 bg-gray-50 border border-gray-100 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:bg-white transition-all resize-none"
                           placeholder="Что напишет бот?"
                           value={node.content}
                           onChange={(e) => updateNode(index, { content: e.target.value })}
                         />
+                        {node.step_type === 'message' && (
+                          <div className="mt-3">
+                            <label className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1 block">Переход к следующему шагу</label>
+                            <select 
+                              className="w-full p-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                              value={node.settings?.next_node || ''}
+                              onChange={(e) => updateNodeSettings(index, { next_node: e.target.value })}
+                            >
+                              <option value="">Завершить чат</option>
+                              {nodes.map((targetNode, tIdx) => (
+                                tIdx !== index && (
+                                  <option key={targetNode.settings?.frontend_id} value={targetNode.settings?.frontend_id}>
+                                    К шагу {tIdx + 1}: {targetNode.content.substring(0, 15)}...
+                                  </option>
+                                )
+                              ))}
+                            </select>
+                          </div>
+                        )}
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
@@ -219,20 +250,83 @@ const Builder: React.FC = () => {
                         </div>
 
                         {node.step_type === 'button_choice' && (
-                          <div>
-                             <label className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1 block">Кнопки (через запятую)</label>
-                             <div className="relative">
-                               <List className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                               <input 
-                                 type="text"
-                                 className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                                 placeholder="Да, Нет, Возможно"
-                                 value={node.settings?.buttons?.join(', ') || ''}
-                                 onChange={(e) => updateNodeSettings(index, { 
-                                   buttons: e.target.value.split(',').map(s => s.trim()).filter(s => s !== '') 
-                                 })}
-                               />
-                             </div>
+                          <div className="col-span-2 space-y-4">
+                            <label className="text-[10px] uppercase tracking-wider font-bold text-gray-400 block">Настройка кнопок и переходов</label>
+                            <div className="space-y-2">
+                              {(node.settings?.buttons || []).map((btnText: string, bIdx: number) => (
+                                <div key={bIdx} className="flex gap-2 items-center bg-indigo-50/50 p-2 rounded-xl border border-indigo-100">
+                                  <input 
+                                    type="text"
+                                    className="flex-1 p-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                                    value={btnText}
+                                    onChange={(e) => {
+                                      const newButtons = [...(node.settings?.buttons || [])];
+                                      newButtons[bIdx] = e.target.value;
+                                      updateNodeSettings(index, { buttons: newButtons });
+                                    }}
+                                    placeholder="Текст кнопки"
+                                  />
+                                  <select 
+                                    className="flex-1 p-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                                    value={node.settings?.branching?.[btnText] || ''}
+                                    onChange={(e) => {
+                                      const newBranching = { ...(node.settings?.branching || {}), [btnText]: e.target.value };
+                                      updateNodeSettings(index, { branching: newBranching });
+                                    }}
+                                  >
+                                    <option value="">Завершить чат</option>
+                                    {nodes.map((targetNode, tIdx) => (
+                                      tIdx !== index && (
+                                        <option key={targetNode.settings?.frontend_id} value={targetNode.settings?.frontend_id}>
+                                          К шагу {tIdx + 1}: {targetNode.content.substring(0, 15)}...
+                                        </option>
+                                      )
+                                    ))}
+                                  </select>
+                                  <button 
+                                    onClick={() => {
+                                      const newButtons = (node.settings?.buttons || []).filter((_: any, i: number) => i !== bIdx);
+                                      const newBranching = { ...(node.settings?.branching || {}) };
+                                      delete newBranching[btnText];
+                                      updateNodeSettings(index, { buttons: newButtons, branching: newBranching });
+                                    }}
+                                    className="p-2 text-red-400 hover:text-red-600 transition-colors"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                            <button 
+                              onClick={() => {
+                                const currentBtns = node.settings?.buttons || [];
+                                updateNodeSettings(index, { buttons: [...currentBtns, 'Новая кнопка'] });
+                              }}
+                              className="flex items-center gap-1 text-xs text-indigo-600 font-bold hover:text-indigo-800 transition-colors px-2 py-1 bg-indigo-50 rounded-lg"
+                            >
+                              <Plus size={14} /> Добавить кнопку
+                            </button>
+                          </div>
+                        )}
+                        
+                        {node.step_type !== 'button_choice' && node.step_type !== 'message' && (
+                          <div className="col-span-2">
+                            <label className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1 block">Следующий шаг</label>
+                            <div className="relative">
+                              <GitBranch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                              <select
+                                className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 appearance-none"
+                                value={node.settings?.next_node || ''}
+                                onChange={(e) => updateNodeSettings(index, { next_node: e.target.value })}
+                              >
+                                <option value="">Завершить сценарий</option>
+                                {nodes.filter((_, i) => i !== index).map((otherNode, i) => (
+                                  <option key={otherNode.settings?.frontend_id} value={otherNode.settings?.frontend_id}>
+                                    Шаг {nodes.indexOf(otherNode) + 1}: {otherNode.content.slice(0, 20)}...
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
                           </div>
                         )}
                       </div>
