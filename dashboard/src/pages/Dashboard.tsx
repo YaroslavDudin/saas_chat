@@ -13,12 +13,15 @@ import {
   Edit2, 
   X,
   ExternalLink,
-  ChevronRight
+  ChevronRight,
+  User as UserIcon,
+  Zap
 } from 'lucide-react';
-import type { Bot } from '../types';
+import type { Bot, User } from '../types';
 
 const Dashboard: React.FC = () => {
   const [bots, setBots] = useState<Bot[]>([]);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newBotName, setNewBotName] = useState('');
@@ -37,19 +40,30 @@ const Dashboard: React.FC = () => {
 
   const fetchBots = async () => {
     try {
-      setIsLoading(true);
       const response = await api.get('/manage/');
       setBots(response.data);
     } catch (error) {
       console.error('Failed to fetch bots:', error);
       setBots([]);
-    } finally {
-      setIsLoading(false);
+    }
+  };
+
+  const fetchUser = async () => {
+    try {
+      const response = await api.get('/me/');
+      setUser(response.data);
+    } catch (error) {
+      console.error('Failed to fetch user:', error);
     }
   };
 
   useEffect(() => {
-    fetchBots();
+    const init = async () => {
+      setIsLoading(true);
+      await Promise.all([fetchBots(), fetchUser()]);
+      setIsLoading(false);
+    };
+    init();
   }, []);
 
   const handleCreateBot = async (e: React.FormEvent) => {
@@ -92,9 +106,10 @@ const Dashboard: React.FC = () => {
 
   const getScriptTag = (widgetId: string) => {
     return `<script
+    type="module"
     id="saas-chat-script"
     data-widget-id="${widgetId}"
-    src="dist/widget.js">
+    src="/src/main.tsx">
 </script>`;
   };
 
@@ -109,10 +124,28 @@ const Dashboard: React.FC = () => {
     <div className="min-h-screen bg-[#f8fafc] p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
-          <div>
-            <h1 className="text-4xl font-black text-slate-900 tracking-tight">Мои Боты</h1>
-            <p className="text-slate-500 font-medium mt-1">Управляйте вашими чат-ассистентами</p>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
+          <div className="flex items-center gap-4">
+            <div className="bg-indigo-600 p-3 rounded-2xl shadow-lg shadow-indigo-200">
+               <MessageSquare className="text-white" size={32} />
+            </div>
+            <div>
+              <h1 className="text-4xl font-black text-slate-900 tracking-tight">Мои Боты</h1>
+              <div className="flex items-center gap-2 mt-1">
+                {user && (
+                  <>
+                    <span className="text-slate-500 font-medium flex items-center gap-1">
+                      <UserIcon size={14} /> {user.username}
+                    </span>
+                    <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+                    <span className={`flex items-center gap-1 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${user.tier === 'premium' ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-500'}`}>
+                      {user.tier === 'premium' && <Zap size={10} fill="currentColor" />}
+                      {user.tier}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
           <div className="flex items-center gap-3 w-full md:w-auto">
              <button

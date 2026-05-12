@@ -1,10 +1,15 @@
 import uuid
+import secrets
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 User = get_user_model()
+
+def generate_widget_id():
+    """Генерирует короткий URL-safe ID для виджета."""
+    return secrets.token_urlsafe(8)
 
 class UserProfile(models.Model):
     TIER_CHOICES = [
@@ -50,9 +55,10 @@ class Bot(TimeStampedModel):
         related_name='bots',
         verbose_name="Владелец"
     )
-    widget_id = models.UUIDField(
-        default=uuid.uuid4, 
-        unique=True, 
+    widget_id = models.CharField(
+        max_length=20,
+        default=generate_widget_id,
+        unique=True,
         editable=False,
         verbose_name="ID виджета"
     )

@@ -2,12 +2,16 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core import exceptions
-from .models import Bot, ScenarioNode
+from .models import Bot, ScenarioNode, Lead, ChatMessage
 
 class UserSerializer(serializers.ModelSerializer):
+    tier = serializers.ReadOnlyField(source='profile.tier')
+    messages_limit = serializers.ReadOnlyField(source='profile.messages_limit')
+    messages_used = serializers.ReadOnlyField(source='profile.messages_used')
+
     class Meta:
         model = User
-        fields = ('id', 'username', 'email')
+        fields = ('id', 'username', 'email', 'tier', 'messages_limit', 'messages_used')
 
 class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
@@ -59,6 +63,19 @@ class ScenarioNodeSerializer(serializers.ModelSerializer):
         model = ScenarioNode
         fields = ['id', 'step_type', 'content', 'settings']
 
+class ChatMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChatMessage
+        fields = ['id', 'node', 'user_answer', 'bot_text', 'created_at']
+
+class LeadSerializer(serializers.ModelSerializer):
+    messages = ChatMessageSerializer(many=True, read_only=True)
+    bot_name = serializers.ReadOnlyField(source='bot.name')
+
+    class Meta:
+        model = Lead
+        fields = ['id', 'bot', 'bot_name', 'visitor_id', 'data', 'messages', 'created_at', 'updated_at']
+
 class BotDashboardSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
     tier = serializers.SerializerMethodField()
@@ -74,4 +91,7 @@ class BotDashboardSerializer(serializers.ModelSerializer):
         read_only_fields = ['widget_id', 'created_at', 'updated_at']
 
     def get_tier(self, obj):
-        return obj.owner.profile.tier
+        try:
+            return obj.owner.profile.tier
+        except (AttributeError, UserProfile.DoesNotExist):
+            return 'free'

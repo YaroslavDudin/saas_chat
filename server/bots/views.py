@@ -5,10 +5,17 @@ from rest_framework import viewsets, permissions, status, generics
 from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.authtoken.models import Token
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.exceptions import ValidationError
-from .models import Bot, ScenarioNode, Lead, ChatMessage
-from .serializers import BotDashboardSerializer, ScenarioNodeSerializer, RegisterSerializer, UserSerializer
+from .models import Bot, ScenarioNode, Lead, ChatMessage, UserProfile
+from .serializers import BotDashboardSerializer, ScenarioNodeSerializer, RegisterSerializer, UserSerializer, LeadSerializer
+
+class LeadViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = LeadSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Lead.objects.filter(bot__owner=self.request.user).select_related('bot').prefetch_related('messages')
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -19,10 +26,11 @@ class RegisterView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        token, created = Token.objects.get_or_create(user=user)
+        refresh = RefreshToken.for_user(user)
         return Response({
             "user": UserSerializer(user, context=self.get_serializer_context()).data,
-            "token": token.key
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
         }, status=status.HTTP_201_CREATED)
 
 class BotViewSet(viewsets.ModelViewSet):
@@ -30,11 +38,17 @@ class BotViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Bot.objects.filter(owner=self.request.user).prefetch_related('nodes')
+        user = self.request.user
+        # Гарантируем наличие профиля, если его почему-то нет
+        if not hasattr(user, 'profile'):
+            UserProfile.objects.get_or_create(user=user)
+        return Bot.objects.filter(owner=user).select_related('owner__profile').prefetch_related('nodes')
 
     def perform_create(self, serializer):
         user = self.request.user
-        if user.profile.tier == 'free':
+        # Убеждаемся, что профиль существует перед проверкой тарифа
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        if profile.tier == 'free':
             existing_bots_count = Bot.objects.filter(owner=user, is_active=True).count()
             if existing_bots_count >= 1:
                 raise ValidationError({"error": "Достигнут лимит ботов на бесплатном тарифе (макс. 1)."})
@@ -48,20 +62,47 @@ class BotViewSet(viewsets.ModelViewSet):
         if not isinstance(nodes_data, list):
             return Response({"error": "Expected a list of nodes."}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Валидация структуры и размера данных
+        if len(nodes_data) > 100:  # Лимит на количество узлов
+            return Response({"error": "Too many nodes. Maximum allowed is 100."}, status=status.HTTP_400_BAD_REQUEST)
+
+        validated_nodes = []
+        for index, node_data in enumerate(nodes_data):
+            # Проверка размера контента и настроек
+            if len(str(node_data.get('content', ''))) > 10000:
+                return Response({"error": f"Content in node {index} is too long."}, status=status.HTTP_400_BAD_REQUEST)
+            if len(str(node_data.get('settings', ''))) > 20000:
+                return Response({"error": f"Settings in node {index} are too large."}, status=status.HTTP_400_BAD_REQUEST)
+
+            serializer = ScenarioNodeSerializer(data=node_data)
+            if not serializer.is_valid():
+                return Response({"error": f"Invalid data in node {index}", "details": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            validated_nodes.append(serializer.validated_data)
+
         with transaction.atomic():
             bot.nodes.all().delete()
             new_nodes = [
                 ScenarioNode(
                     bot=bot,
-                    step_type=node.get('step_type'),
-                    content=node.get('content'),
-                    settings=node.get('settings', {})
-                ) for node in nodes_data
+                    step_type=data.get('step_type'),
+                    content=data.get('content'),
+                    settings=data.get('settings', {})
+                ) for data in validated_nodes
             ]
             ScenarioNode.objects.bulk_create(new_nodes)
 
         serializer = ScenarioNodeSerializer(bot.nodes.all(), many=True)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+class UserDetailView(generics.RetrieveAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        user = self.request.user
+        if not hasattr(user, 'profile'):
+            UserProfile.objects.get_or_create(user=user)
+        return user
 
 class BotResponseAPIView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -84,7 +125,8 @@ class BotResponseAPIView(APIView):
             if bot.allowed_domain not in origin:
                 return Response({"error": "Access from this domain is forbidden."}, status=status.HTTP_403_FORBIDDEN)
 
-        owner_profile = bot.owner.profile
+        # Убеждаемся, что профиль владельца существует
+        owner_profile, _ = UserProfile.objects.get_or_create(user=bot.owner)
 
         if owner_profile.messages_used >= owner_profile.messages_limit:
             return Response(
@@ -104,7 +146,16 @@ class BotResponseAPIView(APIView):
                 target_frontend_id = None
                 if current_node.step_type == 'button_choice':
                     branching = current_node.settings.get('branching', {})
+                    # Сначала ищем точное совпадение
                     target_frontend_id = branching.get(user_value)
+                    
+                    # Если не нашли, ищем без учета регистра и пробелов (для надежности)
+                    if not target_frontend_id and user_value:
+                        normalized_value = str(user_value).strip().lower()
+                        for key, val in branching.items():
+                            if str(key).strip().lower() == normalized_value:
+                                target_frontend_id = val
+                                break
                 else:
                     target_frontend_id = current_node.settings.get('next_node')
 

@@ -36,7 +36,7 @@ const Register: React.FC = () => {
 
     try {
       const response = await api.post('/register/', { username, email, password });
-      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('token', response.data.access);
       navigate('/dashboard');
     } catch (err: any) {
       console.error('Registration failed:', err);

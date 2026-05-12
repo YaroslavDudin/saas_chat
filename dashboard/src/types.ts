@@ -1,3 +1,12 @@
+export type User = {
+  id: number;
+  username: string;
+  email: string;
+  tier: 'free' | 'premium';
+  messages_limit: number;
+  messages_used: number;
+}
+
 export type Bot = {
   id: number;
   name: string;
