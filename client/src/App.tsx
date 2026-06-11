@@ -6,7 +6,7 @@ interface AppProps {
   widgetId: string;
 }
 
-const API_BASE = '/api';
+const API_BASE = 'http://186.246.12.81:5173/api';
 
 /**
  * Custom hook to manage chat state and logic

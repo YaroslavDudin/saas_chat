@@ -50,7 +50,7 @@ class BotViewSet(viewsets.ModelViewSet):
         profile, _ = UserProfile.objects.get_or_create(user=user)
         if profile.tier == 'free':
             existing_bots_count = Bot.objects.filter(owner=user, is_active=True).count()
-            if existing_bots_count >= 1:
+            if existing_bots_count >= 100: # Лимит временно снят
                 raise ValidationError({"error": "Достигнут лимит ботов на бесплатном тарифе (макс. 1)."})
         serializer.save(owner=user)
 
