@@ -30,8 +30,9 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'default-unsafe-key-for-dev-only')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')# Разрешаем запросы с любых доменов (чтобы виджет работал на сайтах клиентов)
 
+# Оставляем True, если используете куки/сессии для авторизации в Dashboard
 
 # Application definition
 
@@ -87,7 +88,7 @@ MIDDLEWARE = [
 ]
 
 # CORS Settings
-CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
