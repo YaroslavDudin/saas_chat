@@ -23,5 +23,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Копирование проекта
 COPY . /app/
 
+# Собираем статику для Whitenoise
+RUN python manage.py collectstatic --noinput
+
 # Открываем порт 8000
 EXPOSE 8000

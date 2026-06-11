@@ -2,6 +2,7 @@ services:
   db:
     image: postgres:15
     container_name: saas_chat_db
+    restart: unless-stopped
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     ports:
@@ -19,6 +20,7 @@ services:
   web:
     build: ./server
     container_name: saas_chat_web
+    restart: unless-stopped
     # В продакшене используем gunicorn
     command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3
     environment:
@@ -35,6 +37,7 @@ services:
   dashboard:
     build: ./dashboard
     container_name: saas_chat_dashboard
+    restart: unless-stopped
     ports:
       - "5173:80"
     depends_on:
@@ -43,6 +46,7 @@ services:
   client:
     build: ./client
     container_name: saas_chat_client
+    restart: unless-stopped
     ports:
       - "5174:80"
     depends_on:
