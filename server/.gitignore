@@ -29,8 +29,10 @@ static/
 staticfiles/
 
 # Environment variables
+# Environment variables
 .env
-
+.venv
+venv/
 # Docker
 .docker/
 
