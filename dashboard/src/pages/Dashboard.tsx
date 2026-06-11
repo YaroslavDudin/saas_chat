@@ -109,15 +109,42 @@ const Dashboard: React.FC = () => {
     type="module"
     id="saas-chat-script"
     data-widget-id="${widgetId}"
-    src="/src/main.tsx">
+    src="http://186.246.12.81:5174/widget.js?v=2">
 </script>`;
   };
 
   const copyToClipboard = (widgetId: string) => {
     const script = getScriptTag(widgetId);
-    navigator.clipboard.writeText(script);
+    
+    // Modern approach with fallback for non-HTTPS
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(script).catch(() => {
+        // Handle potential rejection even in secure context
+        fallbackCopyTextToClipboard(script);
+      });
+    } else {
+      fallbackCopyTextToClipboard(script);
+    }
+
     setCopiedId(widgetId);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const fallbackCopyTextToClipboard = (text: string) => {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-9999px";
+    textArea.style.top = "0";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand('copy');
+    } catch (err) {
+      console.error('Fallback copy failed', err);
+    }
+    document.body.removeChild(textArea);
   };
 
   return (

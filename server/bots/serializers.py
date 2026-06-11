@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core import exceptions
-from .models import Bot, ScenarioNode, Lead, ChatMessage
+from .models import Bot, ScenarioNode, Lead, ChatMessage, UserProfile
 
 class UserSerializer(serializers.ModelSerializer):
     tier = serializers.ReadOnlyField(source='profile.tier')
