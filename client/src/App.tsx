@@ -356,9 +356,10 @@ const App: React.FC<AppProps> = ({ widgetId }) => {
                           onKeyPress={(e) => e.key === 'Enter' && handleAction(inputValue, currentNode.id)}
                         />
                         <button 
-                          className={`twbot:absolute twbot:right-2 twbot:top-1/2 twbot:-translate-y-1/2 twbot:w-11 twbot:h-11 twbot:flex twbot:items-center twbot:justify-center twbot:rounded-xl twbot:transition-all ${inputValue.trim() ? 'twbot:bg-bot-primary twbot:text-white twbot:shadow-lg' : 'twbot:text-slate-300'}`}
+                          className={`twbot:absolute twbot:right-2 twbot:top-1/2 twbot:-translate-y-1/2 twbot:w-11 twbot:h-11 twbot:flex twbot:items-center twbot:justify-center twbot:rounded-xl twbot:transition-all ${inputValue.trim() ? 'twbot:text-white twbot:shadow-lg' : 'twbot:text-slate-300'}`}
                           onClick={() => handleAction(inputValue, currentNode.id)}
                           disabled={!inputValue.trim()}
+                          style={inputValue.trim() ? { backgroundColor: botConfig?.theme_color } : {}}
                         >
                           <Send className="twbot:w-5 twbot:h-5" />
                         </button>
@@ -375,8 +376,9 @@ const App: React.FC<AppProps> = ({ widgetId }) => {
                 {/* CONTINUE BUTTON (Simple Message) */}
                 {currentNode.step_type === 'message' && (
                   <button 
-                    className="twbot:w-full twbot:py-5 twbot:bg-bot-primary twbot:text-white twbot:rounded-2xl twbot:text-xs twbot:font-black twbot:uppercase twbot:tracking-[0.2em] hover:twbot:opacity-95 twbot:transition-all twbot:flex twbot:items-center twbot:justify-center twbot:gap-3 twbot:shadow-[0_10px_25px_-5px_rgba(var(--bot-color-rgb),0.4)]"
+                    className="twbot:w-full twbot:py-5 twbot:text-white twbot:rounded-2xl twbot:text-xs twbot:font-black twbot:uppercase twbot:tracking-[0.2em] hover:twbot:opacity-95 twbot:transition-all twbot:flex twbot:items-center twbot:justify-center twbot:gap-3 twbot:shadow-lg"
                     onClick={() => handleAction(currentNode.settings?.buttons?.[0] || 'Продолжить', currentNode.id)}
+                    style={{ backgroundColor: botConfig?.theme_color }}
                   >
                     {currentNode.settings?.buttons?.[0] || 'Далее'}
                     <ChevronRight className="twbot:w-5 twbot:h-5" />
