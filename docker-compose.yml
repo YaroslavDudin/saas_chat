@@ -22,8 +22,9 @@ services:
     container_name: saas_chat_web
     env_file:
       - ./server/.env
+    ports:                  
+      - "8000:8000"         
     restart: unless-stopped
-    # В продакшене используем gunicorn
     command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3
     environment:
       - DEBUG=0
