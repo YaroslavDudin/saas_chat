@@ -162,6 +162,7 @@ const App: React.FC<AppProps> = ({ widgetId }) => {
   } = useChatWidget(widgetId);
 
   const [inputValue, setInputValue] = useState('');
+  const [validationError, setValidationError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -170,7 +171,52 @@ const App: React.FC<AppProps> = ({ widgetId }) => {
     }
   }, [messages, isTyping, isOpen]);
 
+  const validateInput = (value: string, node: ScenarioNode): string | null => {
+    const type = node.settings?.validation_type || 'none';
+    const regex = node.settings?.validation_regex;
+    const errorMsg = node.settings?.validation_error || 'Некорректный формат данных';
+
+    if (type === 'none') return null;
+
+    if (!value.trim()) return 'Поле не может быть пустым';
+
+    if (type === 'email') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(value) ? null : errorMsg;
+    }
+
+    if (type === 'phone') {
+      const phoneRegex = /^(\+7|7|8)?[\s\-]?\(?[489][0-9]{2}\)?[\s\-]?[0-9]{3}[\s\-]?[0-9]{2}[\s\-]?[0-9]{2}$|^(\+?[1-9]\d{1,14})$/;
+      return phoneRegex.test(value) ? null : errorMsg;
+    }
+
+    if (type === 'number') {
+      return /^\d+$/.test(value) ? null : errorMsg;
+    }
+
+    if (type === 'regex' && regex) {
+      try {
+        const customRegex = new RegExp(regex);
+        return customRegex.test(value) ? null : errorMsg;
+      } catch (e) {
+        console.error('Invalid regex:', regex);
+        return null; // Ignore invalid regex to not block user
+      }
+    }
+
+    return null;
+  };
+
   const handleAction = (text: string, nodeId?: number) => {
+    if (currentNode && (currentNode.step_type === 'question' || currentNode.step_type === 'form')) {
+      const error = validateInput(text, currentNode);
+      if (error) {
+        setValidationError(error);
+        return;
+      }
+    }
+    
+    setValidationError(null);
     sendMessage(text, nodeId);
     setInputValue('');
   };
@@ -286,25 +332,35 @@ const App: React.FC<AppProps> = ({ widgetId }) => {
                 
                 {/* INPUT (Question / Form) */}
                 {(currentNode.step_type === 'question' || currentNode.step_type === 'form') && (
-                  <div className="twbot:relative twbot:flex twbot:items-center twbot:gap-3">
-                    <div className="twbot:flex-1 twbot:relative">
-                      <input 
-                        type="text" 
-                        autoFocus
-                        className="twbot:w-full twbot:pr-14 twbot:pl-6 twbot:py-4.5 twbot:bg-slate-50 twbot:border-2 twbot:border-transparent focus:twbot:border-bot-primary/20 twbot:rounded-[1.5rem] twbot:text-sm focus:twbot:bg-white twbot:outline-none twbot:transition-all twbot:font-medium twbot:placeholder:text-slate-400"
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                        placeholder={currentNode.settings?.placeholder || "Введите ваш ответ..."}
-                        onKeyPress={(e) => e.key === 'Enter' && handleAction(inputValue, currentNode.id)}
-                      />
-                      <button 
-                        className={`twbot:absolute twbot:right-2 twbot:top-1/2 twbot:-translate-y-1/2 twbot:w-11 twbot:h-11 twbot:flex twbot:items-center twbot:justify-center twbot:rounded-xl twbot:transition-all ${inputValue.trim() ? 'twbot:bg-bot-primary twbot:text-white twbot:shadow-lg' : 'twbot:text-slate-300'}`}
-                        onClick={() => handleAction(inputValue, currentNode.id)}
-                        disabled={!inputValue.trim()}
-                      >
-                        <Send className="twbot:w-5 twbot:h-5" />
-                      </button>
+                  <div className="twbot:space-y-2">
+                    <div className="twbot:relative twbot:flex twbot:items-center twbot:gap-3">
+                      <div className="twbot:flex-1 twbot:relative">
+                        <input 
+                          type="text" 
+                          autoFocus
+                          className={`twbot:w-full twbot:pr-14 twbot:pl-6 twbot:py-4.5 twbot:bg-slate-50 twbot:border-2 ${validationError ? 'twbot:border-red-400 twbot:animate-shake' : 'twbot:border-transparent focus:twbot:border-bot-primary/20'} twbot:rounded-[1.5rem] twbot:text-sm focus:twbot:bg-white twbot:outline-none twbot:transition-all twbot:font-medium twbot:placeholder:text-slate-400`}
+                          value={inputValue}
+                          onChange={(e) => {
+                            setInputValue(e.target.value);
+                            if (validationError) setValidationError(null);
+                          }}
+                          placeholder={currentNode.settings?.placeholder || "Введите ваш ответ..."}
+                          onKeyPress={(e) => e.key === 'Enter' && handleAction(inputValue, currentNode.id)}
+                        />
+                        <button 
+                          className={`twbot:absolute twbot:right-2 twbot:top-1/2 twbot:-translate-y-1/2 twbot:w-11 twbot:h-11 twbot:flex twbot:items-center twbot:justify-center twbot:rounded-xl twbot:transition-all ${inputValue.trim() ? 'twbot:bg-bot-primary twbot:text-white twbot:shadow-lg' : 'twbot:text-slate-300'}`}
+                          onClick={() => handleAction(inputValue, currentNode.id)}
+                          disabled={!inputValue.trim()}
+                        >
+                          <Send className="twbot:w-5 twbot:h-5" />
+                        </button>
+                      </div>
                     </div>
+                    {validationError && (
+                      <div className="twbot:text-[11px] twbot:text-red-500 twbot:font-bold twbot:ml-4 twbot:animate-fade-in">
+                        {validationError}
+                      </div>
+                    )}
                   </div>
                 )}
 
