@@ -54,6 +54,16 @@ const BotBuilder: React.FC = () => {
     try {
       const response = await api.get(`/manage/${id}/`);
       const botData = response.data;
+      
+      // Ensure default branding if missing
+      if (!botData.branding_settings || Object.keys(botData.branding_settings).length === 0) {
+        botData.branding_settings = {
+          header_icon_color: "#ffffff",
+          chat_bg: "#f8fafc",
+          bot_bubble_bg: "#ffffff"
+        };
+      }
+      
       setBot(botData);
       setEditTempName(botData.name);
 

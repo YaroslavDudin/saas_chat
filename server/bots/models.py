@@ -65,7 +65,7 @@ class Bot(TimeStampedModel):
     name = models.CharField(max_length=255, verbose_name="Название бота")
     theme_color = models.CharField(
         max_length=7, 
-        default='#000000', 
+        default='#4f46e5', 
         verbose_name="Цвет темы"
     )
     is_active = models.BooleanField(default=True, verbose_name="Активен")
@@ -80,6 +80,15 @@ class Bot(TimeStampedModel):
         blank=True, 
         verbose_name="Настройки брендинга"
     )
+
+    def save(self, *args, **kwargs):
+        if not self.branding_settings:
+            self.branding_settings = {
+                "header_icon_color": "#ffffff",
+                "chat_bg": "#f8fafc",
+                "bot_bubble_bg": "#ffffff"
+            }
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Бот"
