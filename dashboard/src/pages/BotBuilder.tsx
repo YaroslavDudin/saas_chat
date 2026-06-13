@@ -165,10 +165,11 @@ const BotBuilder: React.FC = () => {
     if (nodes.length === 0) return;
     setIsSaving(true);
     try {
-      // Update bot name if changed
-      if (tempName !== bot.name) {
-        await api.patch(`/manage/${id}/`, { name: tempName });
-      }
+      // Update bot name and theme_color if changed
+      await api.patch(`/manage/${id}/`, { 
+        name: tempName,
+        theme_color: bot.theme_color
+      });
 
       const targetNodes = new Set(edges.map(e => e.target));
       
@@ -302,6 +303,43 @@ const BotBuilder: React.FC = () => {
                   Добавьте блоки, чтобы начать
                 </div>
               )}
+            </section>
+
+            <div className="h-[1px] bg-slate-50" />
+
+            {/* Appearance Section */}
+            <section>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 block">Внешний вид</label>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 mb-2 ml-1">Основной цвет</label>
+                  <div className="flex items-center gap-3">
+                    <input 
+                      type="color" 
+                      className="w-12 h-12 p-1 bg-white border border-slate-200 rounded-xl cursor-pointer"
+                      value={bot?.theme_color || '#4f46e5'}
+                      onChange={(e) => setBot(prev => prev ? { ...prev, theme_color: e.target.value } : null)}
+                    />
+                    <input 
+                      type="text"
+                      className="flex-1 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-mono font-bold text-slate-600 uppercase"
+                      value={bot?.theme_color || '#4f46e5'}
+                      onChange={(e) => setBot(prev => prev ? { ...prev, theme_color: e.target.value } : null)}
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-5 gap-2">
+                  {['#4f46e5', '#ef4444', '#10b981', '#f59e0b', '#06b6d4', '#ec4899', '#8b5cf6', '#1e293b', '#6366f1', '#14b8a6'].map(color => (
+                    <button
+                      key={color}
+                      className={`w-full aspect-square rounded-lg border-2 transition-all hover:scale-110 ${bot?.theme_color === color ? 'border-slate-900 shadow-md' : 'border-transparent'}`}
+                      style={{ backgroundColor: color }}
+                      onClick={() => setBot(prev => prev ? { ...prev, theme_color: color } : null)}
+                    />
+                  ))}
+                </div>
+              </div>
             </section>
 
             <div className="h-[1px] bg-slate-50" />

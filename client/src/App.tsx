@@ -288,6 +288,7 @@ const App: React.FC<AppProps> = ({ widgetId }) => {
                       ? 'twbot:bg-white twbot:text-slate-800 twbot:rounded-tl-none twbot:border twbot:border-slate-100' 
                       : 'twbot:bg-bot-primary twbot:text-white twbot:rounded-tr-none'
                   }`}
+                  style={!msg.isBot ? { backgroundColor: botConfig?.theme_color } : {}}
                 >
                   {msg.text}
                   <div className={`twbot:text-[10px] twbot:mt-2 twbot:font-bold twbot:opacity-40 ${msg.isBot ? 'twbot:text-left' : 'twbot:text-right'}`}>
