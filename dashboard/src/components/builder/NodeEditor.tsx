@@ -165,6 +165,42 @@ const NodeEditor: React.FC<NodeEditorProps> = ({ node, onSave, onClose }) => {
                     placeholder="email, name, phone..."
                   />
                 </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 mb-1.5 ml-1">Тип валидации</label>
+                  <select
+                    className="w-full p-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 focus:outline-none transition-all appearance-none cursor-pointer"
+                    value={formData.settings.validation_type || 'none'}
+                    onChange={(e) => handleSettingsChange('validation_type', e.target.value)}
+                  >
+                    <option value="none">Без валидации</option>
+                    <option value="email">Email</option>
+                    <option value="phone">Телефон (RU/INTL)</option>
+                    <option value="number">Только числа</option>
+                    <option value="regex">Свой Regex</option>
+                  </select>
+                </div>
+                {formData.settings.validation_type === 'regex' && (
+                  <div className="animate-in slide-in-from-top-1 duration-200">
+                    <label className="block text-[10px] font-bold text-gray-500 mb-1.5 ml-1">Регулярное выражение (Regex)</label>
+                    <input
+                      type="text"
+                      className="w-full p-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-mono focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 focus:outline-none transition-all"
+                      value={formData.settings.validation_regex || ''}
+                      onChange={(e) => handleSettingsChange('validation_regex', e.target.value)}
+                      placeholder="^[0-9]{4}$"
+                    />
+                  </div>
+                )}
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 mb-1.5 ml-1">Текст ошибки</label>
+                  <input
+                    type="text"
+                    className="w-full p-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 focus:outline-none transition-all"
+                    value={formData.settings.validation_error || ''}
+                    onChange={(e) => handleSettingsChange('validation_error', e.target.value)}
+                    placeholder="Неверный формат ввода"
+                  />
+                </div>
               </div>
             </div>
           </section>
