@@ -165,10 +165,11 @@ const BotBuilder: React.FC = () => {
     if (nodes.length === 0) return;
     setIsSaving(true);
     try {
-      // Update bot name and theme_color if changed
+      // Update bot name, theme_color and branding if changed
       await api.patch(`/manage/${id}/`, { 
         name: tempName,
-        theme_color: bot.theme_color
+        theme_color: bot.theme_color,
+        branding_settings: bot.branding_settings
       });
 
       const targetNodes = new Set(edges.map(e => e.target));
@@ -308,36 +309,101 @@ const BotBuilder: React.FC = () => {
             <div className="h-[1px] bg-slate-50" />
 
             {/* Appearance Section */}
-            <section>
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 block">Внешний вид</label>
-              <div className="space-y-4">
+            <section className="bg-slate-50/50 -mx-6 px-6 py-6 border-y border-slate-100">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 block">Дизайн и брендинг</label>
+              <div className="space-y-6">
+                {/* Theme Color */}
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 mb-2 ml-1">Основной цвет</label>
+                  <label className="block text-[10px] font-bold text-slate-500 mb-2 ml-1">Основной цвет (кнопки, акценты)</label>
                   <div className="flex items-center gap-3">
                     <input 
                       type="color" 
-                      className="w-12 h-12 p-1 bg-white border border-slate-200 rounded-xl cursor-pointer"
+                      className="w-10 h-10 p-1 bg-white border border-slate-200 rounded-lg cursor-pointer shrink-0"
                       value={bot?.theme_color || '#4f46e5'}
                       onChange={(e) => setBot(prev => prev ? { ...prev, theme_color: e.target.value } : null)}
                     />
                     <input 
                       type="text"
-                      className="flex-1 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-mono font-bold text-slate-600 uppercase"
+                      className="flex-1 px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-[10px] font-mono font-bold text-slate-600 uppercase outline-none focus:border-indigo-300"
                       value={bot?.theme_color || '#4f46e5'}
                       onChange={(e) => setBot(prev => prev ? { ...prev, theme_color: e.target.value } : null)}
                     />
                   </div>
                 </div>
-                
-                <div className="grid grid-cols-5 gap-2">
-                  {['#4f46e5', '#ef4444', '#10b981', '#f59e0b', '#06b6d4', '#ec4899', '#8b5cf6', '#1e293b', '#6366f1', '#14b8a6'].map(color => (
-                    <button
-                      key={color}
-                      className={`w-full aspect-square rounded-lg border-2 transition-all hover:scale-110 ${bot?.theme_color === color ? 'border-slate-900 shadow-md' : 'border-transparent'}`}
-                      style={{ backgroundColor: color }}
-                      onClick={() => setBot(prev => prev ? { ...prev, theme_color: color } : null)}
+
+                {/* Header/Icon Color */}
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 mb-2 ml-1">Цвет иконки и заголовка</label>
+                  <div className="flex items-center gap-3">
+                    <input 
+                      type="color" 
+                      className="w-10 h-10 p-1 bg-white border border-slate-200 rounded-lg cursor-pointer shrink-0"
+                      value={bot?.branding_settings?.header_icon_color || '#ffffff'}
+                      onChange={(e) => setBot(prev => prev ? { 
+                        ...prev, 
+                        branding_settings: { ...prev.branding_settings, header_icon_color: e.target.value } 
+                      } : null)}
                     />
-                  ))}
+                    <input 
+                      type="text"
+                      className="flex-1 px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-[10px] font-mono font-bold text-slate-600 uppercase outline-none"
+                      value={bot?.branding_settings?.header_icon_color || '#ffffff'}
+                      onChange={(e) => setBot(prev => prev ? { 
+                        ...prev, 
+                        branding_settings: { ...prev.branding_settings, header_icon_color: e.target.value } 
+                      } : null)}
+                    />
+                  </div>
+                </div>
+
+                {/* Chat Background */}
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 mb-2 ml-1">Фон окна чата</label>
+                  <div className="flex items-center gap-3">
+                    <input 
+                      type="color" 
+                      className="w-10 h-10 p-1 bg-white border border-slate-200 rounded-lg cursor-pointer shrink-0"
+                      value={bot?.branding_settings?.chat_bg || '#f8fafc'}
+                      onChange={(e) => setBot(prev => prev ? { 
+                        ...prev, 
+                        branding_settings: { ...prev.branding_settings, chat_bg: e.target.value } 
+                      } : null)}
+                    />
+                    <input 
+                      type="text"
+                      className="flex-1 px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-[10px] font-mono font-bold text-slate-600 uppercase outline-none"
+                      value={bot?.branding_settings?.chat_bg || '#f8fafc'}
+                      onChange={(e) => setBot(prev => prev ? { 
+                        ...prev, 
+                        branding_settings: { ...prev.branding_settings, chat_bg: e.target.value } 
+                      } : null)}
+                    />
+                  </div>
+                </div>
+
+                {/* Bot Message Bubble */}
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 mb-2 ml-1">Цвет сообщений бота</label>
+                  <div className="flex items-center gap-3">
+                    <input 
+                      type="color" 
+                      className="w-10 h-10 p-1 bg-white border border-slate-200 rounded-lg cursor-pointer shrink-0"
+                      value={bot?.branding_settings?.bot_bubble_bg || '#ffffff'}
+                      onChange={(e) => setBot(prev => prev ? { 
+                        ...prev, 
+                        branding_settings: { ...prev.branding_settings, bot_bubble_bg: e.target.value } 
+                      } : null)}
+                    />
+                    <input 
+                      type="text"
+                      className="flex-1 px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-[10px] font-mono font-bold text-slate-600 uppercase outline-none"
+                      value={bot?.branding_settings?.bot_bubble_bg || '#ffffff'}
+                      onChange={(e) => setBot(prev => prev ? { 
+                        ...prev, 
+                        branding_settings: { ...prev.branding_settings, bot_bubble_bg: e.target.value } 
+                      } : null)}
+                    />
+                  </div>
                 </div>
               </div>
             </section>

@@ -223,6 +223,9 @@ const App: React.FC<AppProps> = ({ widgetId }) => {
 
   const themeStyle = {
     '--bot-color': botConfig?.theme_color || '#4f46e5',
+    '--chat-bg': botConfig?.branding?.chat_bg || '#f8fafc',
+    '--header-text-color': botConfig?.branding?.header_icon_color || '#ffffff',
+    '--bot-bubble-bg': botConfig?.branding?.bot_bubble_bg || '#ffffff',
   } as React.CSSProperties;
 
   return (
@@ -232,6 +235,7 @@ const App: React.FC<AppProps> = ({ widgetId }) => {
         className={`twbot:w-16 twbot:h-16 twbot:rounded-[1.8rem] twbot:shadow-2xl twbot:flex twbot:items-center twbot:justify-center twbot:transition-all twbot:duration-500 twbot:ease-in-out hover:twbot:scale-110 active:twbot:scale-95 twbot:bg-bot-primary twbot:text-white twbot:relative ${isOpen ? 'twbot:rotate-90' : ''}`}
         onClick={() => setIsOpen(!isOpen)}
         aria-label={isOpen ? "Закрыть чат" : "Открыть чат"}
+        style={{ backgroundColor: botConfig?.theme_color, color: botConfig?.branding?.header_icon_color }}
       >
         {isOpen ? <X className="twbot:w-8 twbot:h-8" /> : <MessageCircle className="twbot:w-8 twbot:h-8" />}
         {!isOpen && messages.length === 0 && (
@@ -241,14 +245,14 @@ const App: React.FC<AppProps> = ({ widgetId }) => {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="twbot:absolute twbot:bottom-20 twbot:right-0 twbot:w-[420px] twbot:max-h-[700px] twbot:h-[calc(100vh-120px)] twbot:bg-white twbot:rounded-[2.5rem] twbot:shadow-[0_30px_90px_-20px_rgba(0,0,0,0.3)] twbot:flex twbot:flex-col twbot:overflow-hidden twbot:animate-fade-in-up twbot:border twbot:border-gray-100">
+        <div className="twbot:absolute twbot:bottom-20 twbot:right-0 twbot:w-[420px] twbot:max-h-[700px] twbot:h-[calc(100vh-120px)] twbot:bg-white twbot:rounded-[2.5rem] twbot:shadow-[0_30px_90px_-20px_rgba(0,0,0,0.3)] twbot:flex twbot:flex-col twbot:overflow-hidden twbot:animate-fade-in-up twbot:border twbot:border-gray-100" style={{ backgroundColor: 'var(--chat-bg)' }}>
           
           {/* Header */}
-          <div className="twbot:p-7 twbot:text-white twbot:bg-bot-primary twbot:flex twbot:items-center twbot:gap-4 twbot:relative twbot:overflow-hidden">
+          <div className="twbot:p-7 twbot:text-white twbot:bg-bot-primary twbot:flex twbot:items-center twbot:gap-4 twbot:relative twbot:overflow-hidden" style={{ backgroundColor: botConfig?.theme_color, color: 'var(--header-text-color)' }}>
              {/* Decorative background element */}
             <div className="twbot:absolute twbot:-top-10 twbot:-right-10 twbot:w-40 twbot:h-40 twbot:bg-white/10 twbot:rounded-full twbot:blur-3xl" />
             
-            <div className="twbot:w-14 twbot:h-14 twbot:rounded-2xl twbot:bg-white/20 twbot:flex twbot:items-center twbot:justify-center twbot:backdrop-blur-xl twbot:border twbot:border-white/20 twbot:shadow-inner">
+            <div className="twbot:w-14 twbot:h-14 twbot:rounded-2xl twbot:bg-white/20 twbot:flex twbot:items-center twbot:justify-center twbot:backdrop-blur-xl twbot:border twbot:border-white/20 twbot:shadow-inner" style={{ color: 'var(--header-text-color)' }}>
               <User className="twbot:w-8 twbot:h-8" />
             </div>
             <div className="twbot:flex-1 twbot:z-10">
@@ -273,7 +277,7 @@ const App: React.FC<AppProps> = ({ widgetId }) => {
           </div>
           
           {/* Messages Area */}
-          <div className="twbot:flex-1 twbot:overflow-y-auto twbot:p-6 twbot:space-y-6 twbot:bg-slate-50/50 twbot:custom-scrollbar">
+          <div className="twbot:flex-1 twbot:overflow-y-auto twbot:p-6 twbot:space-y-6 twbot:custom-scrollbar" style={{ backgroundColor: 'var(--chat-bg)' }}>
             {error && (
               <div className="twbot:p-4 twbot:bg-red-50 twbot:text-red-600 twbot:text-sm twbot:rounded-2xl twbot:text-center twbot:font-medium twbot:border twbot:border-red-100">
                 {error}
@@ -285,10 +289,13 @@ const App: React.FC<AppProps> = ({ widgetId }) => {
                 <div 
                   className={`twbot:max-w-[85%] twbot:p-4 twbot:px-5 twbot:rounded-[1.8rem] twbot:text-[14px] twbot:leading-relaxed twbot:shadow-sm twbot:whitespace-pre-wrap ${
                     msg.isBot 
-                      ? 'twbot:bg-white twbot:text-slate-800 twbot:rounded-tl-none twbot:border twbot:border-slate-100' 
-                      : 'twbot:bg-bot-primary twbot:text-white twbot:rounded-tr-none'
+                      ? 'twbot:text-slate-800 twbot:rounded-tl-none twbot:border twbot:border-slate-100' 
+                      : 'twbot:text-white twbot:rounded-tr-none'
                   }`}
-                  style={!msg.isBot ? { backgroundColor: botConfig?.theme_color } : {}}
+                  style={msg.isBot 
+                    ? { backgroundColor: 'var(--bot-bubble-bg)' } 
+                    : { backgroundColor: botConfig?.theme_color }
+                  }
                 >
                   {msg.text}
                   <div className={`twbot:text-[10px] twbot:mt-2 twbot:font-bold twbot:opacity-40 ${msg.isBot ? 'twbot:text-left' : 'twbot:text-right'}`}>

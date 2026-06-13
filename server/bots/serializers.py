@@ -86,7 +86,8 @@ class BotDashboardSerializer(serializers.ModelSerializer):
         model = Bot
         fields = [
             'id', 'widget_id', 'name', 'theme_color', 'is_active', 
-            'owner', 'tier', 'nodes', 'leads_count', 'created_at', 'updated_at'
+            'owner', 'tier', 'nodes', 'leads_count', 'branding_settings',
+            'created_at', 'updated_at'
         ]
         read_only_fields = ['widget_id', 'created_at', 'updated_at']
 

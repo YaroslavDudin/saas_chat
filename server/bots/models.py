@@ -75,6 +75,11 @@ class Bot(TimeStampedModel):
         null=True, 
         help_text='Например: example.com'
     )
+    branding_settings = models.JSONField(
+        default=dict, 
+        blank=True, 
+        verbose_name="Настройки брендинга"
+    )
 
     class Meta:
         verbose_name = "Бот"

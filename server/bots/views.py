@@ -201,5 +201,6 @@ class BotInitAPIView(APIView):
         return Response({
             "name": bot.name,
             "theme_color": bot.theme_color,
+            "branding": bot.branding_settings,
             "first_node": ScenarioNodeSerializer(first_node).data if first_node else None
         })
