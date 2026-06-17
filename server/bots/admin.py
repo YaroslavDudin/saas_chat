@@ -1,5 +1,36 @@
 from django.contrib import admin
-from .models import Bot, ScenarioNode, Lead
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import User
+from .models import Bot, ScenarioNode, Lead, UserProfile
+
+# Define an inline admin descriptor for UserProfile model
+class UserProfileInline(admin.StackedInline):
+    model = UserProfile
+    can_delete = False
+    verbose_name_plural = 'Профиль пользователя'
+
+# Define a new User admin
+class UserAdmin(BaseUserAdmin):
+    inlines = (UserProfileInline,)
+    list_display = BaseUserAdmin.list_display + ('get_messages_limit', 'get_messages_used')
+
+    def get_messages_limit(self, instance):
+        return instance.profile.messages_limit
+    get_messages_limit.short_description = 'Лимит сообщений'
+
+    def get_messages_used(self, instance):
+        return instance.profile.messages_used
+    get_messages_used.short_description = 'Использовано'
+
+# Re-register UserAdmin
+admin.site.unregister(User)
+admin.site.register(User, UserAdmin)
+
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'tier', 'messages_limit', 'messages_used')
+    list_filter = ('tier',)
+    search_fields = ('user__username', 'user__email')
 
 @admin.register(Bot)
 class BotAdmin(admin.ModelAdmin):

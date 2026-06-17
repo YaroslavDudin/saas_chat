@@ -19,7 +19,7 @@ class UserProfile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile', verbose_name="Пользователь")
     tier = models.CharField(max_length=20, choices=TIER_CHOICES, default='free', verbose_name="Тариф")
-    messages_limit = models.IntegerField(default=10000, verbose_name="Лимит сообщений")
+    messages_limit = models.IntegerField(default=100, verbose_name="Лимит сообщений")
     messages_used = models.IntegerField(default=0, verbose_name="Использовано сообщений")
 
     def __str__(self):
